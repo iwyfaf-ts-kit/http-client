@@ -1,7 +1,7 @@
 {
   "name": "@iwyfaf-ts-kit/http-client",
   "description": "HTTP‑клиент обеспечивающий единый способ выполнения REST‑запросов в разных проектах.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "ISC",
   "author": {
     "name": "iWatchYouFromAfar",

@@ -1,6 +1,21 @@
 # Changelog
 
 
+## v1.1.0
+
+
+### 🚀 Enhancements
+
+- First init ([2394100](https://github.com/iwyfaf-ts-kit/http-client/commit/2394100))
+
+### 🏡 Chore
+
+- Ignore local .npmrc in http-client lib ([9beebda](https://github.com/iwyfaf-ts-kit/http-client/commit/9beebda))
+
+### ❤️ Contributors
+
+- Iwatchyoufromafar <skip1209@yahoo.com>
+
 ## v1.1.1
 
 [compare changes](https://undefined/undefined/compare/v1.1.0...v1.1.1)
