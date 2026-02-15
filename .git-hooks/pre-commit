@@ -1,0 +1,4 @@
+#!/bin/bash
+cd libraries/http-client/
+npx vitest --dom --watch=false &&
+npx prettier "**/*.{ts}" --check --ignore-unknown

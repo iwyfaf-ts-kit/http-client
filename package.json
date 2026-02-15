@@ -1,0 +1,22 @@
+{
+  "name": "vue-library-builder",
+  "description": "Builder for develop Vue libraries",
+  "private": true,
+  "license": "ISC",
+  "author": {
+    "name": "iWatchYouFromAfar",
+    "email": "tommy.riley@yandex.ru"
+  },
+  "scripts": {
+    "library:new": "ts-node --project ./scripts/tsconfig.json ./scripts/new.library.ts",
+    "playground:new": "ts-node --project ./scripts/tsconfig.json ./scripts/new.playground.ts"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^8.2.0",
+    "chalk": "^4.1.2",
+    "inquirer": "^8.2.0",
+    "prettier": "^2.8.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.9.3"
+  }
+}

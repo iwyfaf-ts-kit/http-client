@@ -1,0 +1,42 @@
+{
+  "name": "@iwyfaf-ts-kit/http-client",
+  "description": "HTTP‑клиент обеспечивающий единый способ выполнения REST‑запросов в разных проектах.",
+  "version": "1.0.0",
+  "license": "ISC",
+  "author": {
+    "name": "iWatchYouFromAfar",
+    "email": "tommy.riley@yandex.ru"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:iwyfaf-ts-kit/http-client.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "type": "module",
+  "module": "dist/index.es.js",
+  "types": "dist/types/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && vite build",
+    "prettier": "npx prettier \"**/*.{ts}\" --check --ignore-unknown",
+    "release": "npm run test && npm run build && changelogen --release --push --publish --no-github",
+    "pre-release": "npm run test && npm run build && changelogen --release --no-github --no-commit --no-output --no-tag --prerelease beta --push --publish --publishTag beta",
+    "test": "vitest --dom --watch=false",
+    "test:watch": "vitest --dom"
+  },
+  "devDependencies": {
+    "changelogen": "^0.6.2",
+    "happy-dom": "^20.4.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4",
+    "vite-plugin-static-copy": "^3.2.0",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=22.22.0"
+  }
+}
