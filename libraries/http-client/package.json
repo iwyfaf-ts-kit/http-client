@@ -22,7 +22,7 @@
   ],
   "scripts": {
     "build": "tsc && vite build",
-    "prettier": "npx prettier \"**/*.{ts}\" --check --ignore-unknown",
+    "prettier": "npx prettier \"**/*.ts\" --check --ignore-unknown",
     "release": "npm run test && npm run build && changelogen --release --push --publish --no-github",
     "pre-release": "npm run test && npm run build && changelogen --release --no-github --no-commit --no-output --no-tag --prerelease beta --push --publish --publishTag beta",
     "test": "vitest --dom --watch=false",
