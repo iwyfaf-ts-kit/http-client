@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v1.2.0
+
+[compare changes](https://github.com/iwyfaf-ts-kit/http-client/compare/v1.1.1...v1.2.0)
+
+### 🚀 Enhancements
+
+- Improve response parsing based on content-type ([7956b0e](https://github.com/iwyfaf-ts-kit/http-client/commit/7956b0e))
+
+### 🏡 Chore
+
+- Clean up http-client changelog ([a83b959](https://github.com/iwyfaf-ts-kit/http-client/commit/a83b959))
+
+### ❤️ Contributors
+
+- Iwatchyoufromafar <skip1209@yahoo.com>
+
 ## v1.1.1
 
 [compare changes](https://github.com/iwyfaf-ts-kit/http-client/compare/v1.1.0...v1.1.1)
