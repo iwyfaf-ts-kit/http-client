@@ -24,6 +24,7 @@ describe('HttpClientFetch', () => {
         status: 200,
         url: `${BASE_URL}/items/1`,
         json: vi.fn().mockResolvedValue(responseBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -52,6 +53,7 @@ describe('HttpClientFetch', () => {
         status: 400,
         url: `${BASE_URL}/items/1`,
         json: vi.fn().mockResolvedValue(errorBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -87,6 +89,7 @@ describe('HttpClientFetch', () => {
         status: 200,
         url: `${BASE_URL}/items`,
         json: vi.fn().mockResolvedValue(responseBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -138,6 +141,7 @@ describe('HttpClientFetch', () => {
         status: 200,
         url: `${BASE_URL}/items/1`,
         json: vi.fn().mockResolvedValue(originalBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -166,6 +170,62 @@ describe('HttpClientFetch', () => {
       const result = await client.request<typeof interceptedBody>(config);
 
       expect(result).toStrictEqual(interceptedBody);
+      expect(mockResponse.json).not.toHaveBeenCalled();
+    });
+
+    it('Should use json parser when content-type is application/json.', async () => {
+      const responseBody = { id: 1 };
+
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        url: `${BASE_URL}/items/1`,
+        headers: { get: vi.fn().mockReturnValue('application/json; charset=utf-8') },
+        json: vi.fn().mockResolvedValue(responseBody),
+        text: vi.fn(),
+      } as unknown as Response;
+
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      const config: TRequestConfig = {
+        method: 'GET',
+        url: '/items/1',
+        requestRetry: false,
+        retryCount: 0,
+      };
+
+      const result = await client.request<typeof responseBody>(config);
+
+      expect(result).toStrictEqual(responseBody);
+      expect(mockResponse.json).toHaveBeenCalledTimes(1);
+      expect(mockResponse.text).not.toHaveBeenCalled();
+    });
+
+    it('Should use text parser when content-type is text/html.', async () => {
+      const htmlBody = '<html><body>Not Found</body></html>';
+
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        url: `${BASE_URL}/items/1`,
+        headers: { get: vi.fn().mockReturnValue('text/html; charset=utf-8') },
+        json: vi.fn(),
+        text: vi.fn().mockResolvedValue(htmlBody),
+      } as unknown as Response;
+
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      const config: TRequestConfig = {
+        method: 'GET',
+        url: '/items/1',
+        requestRetry: false,
+        retryCount: 0,
+      };
+
+      const result = await client.request<string>(config);
+
+      expect(result).toEqual(htmlBody);
+      expect(mockResponse.text).toHaveBeenCalledTimes(1);
       expect(mockResponse.json).not.toHaveBeenCalled();
     });
 
@@ -204,6 +264,7 @@ describe('HttpClientFetch', () => {
         status: 200,
         url: `${BASE_URL}/items`,
         json: vi.fn().mockResolvedValue(responseBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -234,6 +295,7 @@ describe('HttpClientFetch', () => {
         status: 200,
         url: `${BASE_URL}/items`,
         json: vi.fn().mockResolvedValue(responseBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -264,6 +326,7 @@ describe('HttpClientFetch', () => {
         status: 201,
         url: `${BASE_URL}/items`,
         json: vi.fn().mockResolvedValue(responseBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -293,6 +356,7 @@ describe('HttpClientFetch', () => {
         status: 201,
         url: `${BASE_URL}/items`,
         json: vi.fn().mockResolvedValue(responseBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -324,6 +388,7 @@ describe('HttpClientFetch', () => {
         status: 200,
         url: `${BASE_URL}/upload`,
         json: vi.fn().mockResolvedValue(responseBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -355,6 +420,7 @@ describe('HttpClientFetch', () => {
         status: 200,
         url: `${BASE_URL}/items/1`,
         json: vi.fn().mockResolvedValue(responseBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -386,6 +452,7 @@ describe('HttpClientFetch', () => {
         status: 200,
         url: `${BASE_URL}/items/1`,
         json: vi.fn().mockResolvedValue(responseBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -416,6 +483,7 @@ describe('HttpClientFetch', () => {
         status: 200,
         url: `${BASE_URL}/items/1`,
         json: vi.fn().mockResolvedValue(responseBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -442,6 +510,7 @@ describe('HttpClientFetch', () => {
         status: 200,
         url: `${BASE_URL}/items/1`,
         json: vi.fn().mockResolvedValue(responseBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -471,6 +540,7 @@ describe('HttpClientFetch', () => {
         status: 200,
         url: `${BASE_URL}/items`,
         json: vi.fn().mockResolvedValue(responseBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 
@@ -536,6 +606,7 @@ describe('HttpClientFetch', () => {
         status: 200,
         url: `${BASE_URL}/items`,
         json: vi.fn().mockResolvedValue(baseBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
         text: vi.fn(),
       } as unknown as Response;
 

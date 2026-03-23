@@ -159,7 +159,13 @@ export default class HttpClientFetch implements IHttpClient {
       return data.text();
     }
 
-    return data.json();
+    const contentType = data.headers.get('content-type') ?? '';
+
+    if (contentType.includes('application/json')) {
+      return data.json();
+    }
+
+    return data.text();
   }
 
   private async normalizeError<Error>(
@@ -176,16 +182,18 @@ export default class HttpClientFetch implements IHttpClient {
 
   private async fetchIt<TResponse>(url: string, config: TRequestConfig): Promise<TResponse> {
     return new Promise((resolve, reject) => {
-      fetch(url, config).then(async (response: Response) => {
-        const interceptedResponse = this.applyResponseInterceptors(response, config);
+      fetch(url, config)
+        .then(async (response: Response) => {
+          const interceptedResponse = this.applyResponseInterceptors(response, config);
 
-        if (!response.ok) {
-          reject(await this.normalizeError(response, await this.parse(response)));
-          return;
-        }
+          if (!response.ok) {
+            reject(await this.normalizeError(response, await this.parse(response)));
+            return;
+          }
 
-        resolve(this.parse(await interceptedResponse));
-      });
+          resolve(this.parse(await interceptedResponse));
+        })
+        .catch(reject);
     });
   }
 }
