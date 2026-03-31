@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.3.0
+
+[compare changes](https://github.com/iwyfaf-ts-kit/http-client/compare/v1.2.0...v1.3.0)
+
+### 🚀 Enhancements
+
+- Add upload progress tracking support via XMLHttpRequest ([d9b031a](https://github.com/iwyfaf-ts-kit/http-client/commit/d9b031a))
+
+### ❤️ Contributors
+
+- Iwatchyoufromafar <skip1209@yahoo.com>
+
 ## v1.2.0
 
 [compare changes](https://github.com/iwyfaf-ts-kit/http-client/compare/v1.1.1...v1.2.0)
