@@ -135,11 +135,26 @@ const createdWithHeaders = await httpClient.post<TCreateItemResponse, TCreateIte
 
 Не устанавливает Content-Type принудительно — это позволяет корректно работать с FormData и др.
 
+При передаче `onProgress` использует `XMLHttpRequest` (XHR) для отслеживания прогресса.
+
+**Обычная загрузка файла:**
 ```typescript
 const formData = new FormData();
 formData.append('file', file);
 
-const result = await httpClient.upload<{ url: string }>('/upload', formData);
+await httpClient.upload<{ url: string }>('/upload', formData);
+```
+
+**Загрузка файла с прогрессией:**
+```typescript
+const formData = new FormData();
+formData.append('file', file);
+
+const onProgress: TUploadProgressCallback = (percent) => {
+  uploadProgress.value = percent;
+};
+
+await httpClient.upload<string>('upload', formData, {}, onProgress);
 ```
 
 ### `put`

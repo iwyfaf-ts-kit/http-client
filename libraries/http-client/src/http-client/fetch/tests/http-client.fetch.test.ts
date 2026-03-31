@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import HttpClientFetch from '../http-client.fetch';
 import type { TRequestConfig, TResponseError } from '../../../types';
 
@@ -407,6 +407,133 @@ describe('HttpClientFetch', () => {
       const headers = calledConfig.headers as Record<string, string>;
       expect(headers.Accept).toEqual('application/json, text/plain, */*');
       expect(headers['Content-Type']).toBeUndefined();
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    function makeXhrMock(overrides: Record<string, unknown> = {}) {
+      return {
+        open: vi.fn(),
+        send: vi.fn(),
+        setRequestHeader: vi.fn(),
+        upload: { addEventListener: vi.fn() },
+        addEventListener: vi.fn(),
+        ...overrides,
+      };
+    }
+
+    function stubXhr(xhrMock: ReturnType<typeof makeXhrMock>) {
+      vi.stubGlobal('XMLHttpRequest', function (this: any) {
+        return xhrMock;
+      });
+    }
+
+    function findHandler(mock: ReturnType<typeof vi.fn>, event: string): Function | undefined {
+      return (mock.mock.calls as [string, Function][]).find(([e]) => e === event)?.[1];
+    }
+
+    it('Should use XHR and call onProgress with percentage when onProgress is provided.', async () => {
+      const formData = new FormData();
+      const responseBody = { success: true };
+      const progressValues: number[] = [];
+      const xhrMock = makeXhrMock({ status: 200, responseText: JSON.stringify(responseBody) });
+      stubXhr(xhrMock);
+
+      const uploadPromise = client.upload<typeof responseBody, FormData>(
+        '/upload',
+        formData,
+        {},
+        (percent) => progressValues.push(percent),
+      );
+
+      const progressHandler = findHandler(xhrMock.upload.addEventListener, 'progress');
+      progressHandler?.({ lengthComputable: true, loaded: 50, total: 100 });
+      progressHandler?.({ lengthComputable: true, loaded: 100, total: 100 });
+
+      findHandler(xhrMock.addEventListener, 'load')?.();
+
+      const result = await uploadPromise;
+
+      expect(result).toStrictEqual(responseBody);
+      expect(progressValues).toEqual([50, 100]);
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    it('Should reject with normalized error when XHR upload fails with non-2xx status.', async () => {
+      const formData = new FormData();
+      const errorBody = { message: 'Server Error' };
+      const xhrMock = makeXhrMock({
+        status: 500,
+        responseText: JSON.stringify(errorBody),
+        responseURL: `${BASE_URL}/upload`,
+      });
+      stubXhr(xhrMock);
+
+      const uploadPromise = client.upload<typeof errorBody, FormData>(
+        '/upload',
+        formData,
+        {},
+        vi.fn(),
+      );
+
+      findHandler(xhrMock.addEventListener, 'load')?.();
+
+      let caughtError: TResponseError<typeof errorBody> | undefined;
+      try {
+        await uploadPromise;
+      } catch (error) {
+        caughtError = error as TResponseError<typeof errorBody>;
+      }
+
+      expect(caughtError).toBeDefined();
+      expect(caughtError?.status).toEqual(500);
+      expect(caughtError?.data).toStrictEqual(errorBody);
+    });
+
+    it('Should reject on XHR network error.', async () => {
+      const formData = new FormData();
+      const xhrMock = makeXhrMock();
+      stubXhr(xhrMock);
+
+      const uploadPromise = client.upload<unknown, FormData>('/upload', formData, {}, vi.fn());
+
+      findHandler(xhrMock.addEventListener, 'error')?.();
+
+      await expect(uploadPromise).rejects.toThrow('Network error');
+    });
+
+    it('Should apply request interceptors when using XHR upload with onProgress.', async () => {
+      const formData = new FormData();
+      const responseBody = { ok: true };
+      const xhrMock = makeXhrMock({ status: 200, responseText: JSON.stringify(responseBody) });
+      stubXhr(xhrMock);
+
+      client.addRequestInterceptor({
+        onRequest(config: TRequestConfig): TRequestConfig {
+          return {
+            ...config,
+            headers: { ...(config.headers as Record<string, string>), Authorization: 'Bearer tok' },
+          };
+        },
+      });
+
+      const uploadPromise = client.upload<typeof responseBody, FormData>(
+        '/upload',
+        formData,
+        {},
+        vi.fn(),
+      );
+
+      findHandler(xhrMock.addEventListener, 'load')?.();
+
+      await uploadPromise;
+
+      const authHeader = (xhrMock.setRequestHeader.mock.calls as [string, string][]).find(
+        ([name]) => name === 'Authorization',
+      );
+      expect(authHeader?.[1]).toEqual('Bearer tok');
     });
   });
 

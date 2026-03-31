@@ -4,6 +4,7 @@ import type {
   TRequestInterceptor,
   TResponseError,
   TResponseInterceptor,
+  TUploadProgressCallback,
 } from '../http-client.types';
 
 /**
@@ -115,32 +116,33 @@ export declare class HttpClientFetch implements IHttpClient {
   ): Promise<TResponse>;
 
   /**
-   * Выполняет HTTP-запрос для загрузки файлов или данных (upload).
+   * Выполняет загрузку файла на сервер методом POST.
+   * При передаче `onProgress` использует XMLHttpRequest (XHR) для отслеживания прогресса.
    *
    * @param {string} url
-   * Относительный или абсолютный путь ресурса, к которому выполняется запрос.
+   * Адрес для загрузки.
    *
    * @param {TPayload} payload
-   * Данные или форма, которые будут отправлены на сервер для загрузки.
+   * Тело запроса (обычно `FormData`).
    *
    * @param {HeadersInit} [headers]
-   * Дополнительные заголовки, которые будут добавлены к запросу.
+   * Дополнительные заголовки.
    *
-   * @returns {Promise<TResponse>}
-   * Промис, который разрешается с типизированным телом ответа.
-   *
-   * @throws
-   * Может выбрасывать ошибки сети, ошибки парсинга или нормализованные ошибки ответа.
+   * @param {TUploadProgressCallback} [onProgress]
+   * Колбэк с процентом загрузки (0–100).
    *
    * @example
+   * ```ts
    * const formData = new FormData();
    * formData.append('file', file);
-   * const result = await client.upload<{ url: string }>('/upload', formData);
+   * await httpClient.upload('/files', formData, {}, (percent) => console.log(percent));
+   * ```
    */
-  public upload<TResponse, TPayload = object>(
+  upload<TResponse, TPayload = object>(
     url: string,
     payload: TPayload,
     headers?: HeadersInit,
+    onProgress?: TUploadProgressCallback,
   ): Promise<TResponse>;
 
   /**

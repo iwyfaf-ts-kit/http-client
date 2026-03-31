@@ -87,6 +87,11 @@ export type TResponseError<Error> = {
 };
 
 /**
+ * Callback-функция с процентом загрузки (0–100).
+ */
+export type TUploadProgressCallback = (percent: number) => void;
+
+/**
  * Интерцептор запроса, позволяющий модифицировать конфигурацию перед отправкой.
  *
  * @example

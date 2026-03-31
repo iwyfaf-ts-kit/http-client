@@ -4,6 +4,7 @@ import type {
   TResponseError,
   TRequestInterceptor,
   TResponseInterceptor,
+  TUploadProgressCallback,
 } from '../../types';
 
 export default class HttpClientFetch implements IHttpClient {
@@ -59,6 +60,7 @@ export default class HttpClientFetch implements IHttpClient {
     url: string,
     payload: TPayload,
     headers?: HeadersInit,
+    onProgress?: TUploadProgressCallback,
   ): Promise<TResponse> {
     const config: TRequestConfig = {
       method: 'POST',
@@ -72,7 +74,60 @@ export default class HttpClientFetch implements IHttpClient {
       retryCount: 0,
     };
 
-    return this.request<TResponse>(config);
+    if (!onProgress) {
+      return this.request<TResponse>(config);
+    }
+
+    const interceptedConfig = this.applyRequestInterceptors(config);
+    const fullUrl = `${this.baseUrl}${url}`;
+
+    return new Promise<TResponse>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (event: ProgressEvent) => {
+        if (event.lengthComputable) {
+          onProgress(Math.round((event.loaded / event.total) * 100));
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        const data = this.parseXhrResponse<TResponse>(xhr.responseText);
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(data);
+        } else {
+          const error: TResponseError<TResponse> = {
+            status: xhr.status,
+            url: xhr.responseURL,
+            raw: new Response(xhr.responseText, { status: xhr.status }),
+            data,
+          };
+          reject(error);
+        }
+      });
+
+      xhr.addEventListener('error', () => reject(new Error('Network error')));
+      xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
+
+      xhr.open('POST', fullUrl);
+
+      const resolvedHeaders = interceptedConfig.headers as Record<string, string> | undefined;
+      if (resolvedHeaders) {
+        Object.entries(resolvedHeaders).forEach(([name, value]) => {
+          xhr.setRequestHeader(name, value);
+        });
+      }
+
+      xhr.send(payload as XMLHttpRequestBodyInit);
+    });
+  }
+
+  private parseXhrResponse<T>(responseText: string): T {
+    try {
+      return JSON.parse(responseText) as T;
+    } catch {
+      return responseText as unknown as T;
+    }
   }
 
   public async put<TResponse, TPayload = object>(
