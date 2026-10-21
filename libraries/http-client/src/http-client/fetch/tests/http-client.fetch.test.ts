@@ -418,6 +418,7 @@ describe('HttpClientFetch', () => {
         open: vi.fn(),
         send: vi.fn(),
         setRequestHeader: vi.fn(),
+        getResponseHeader: vi.fn().mockReturnValue(null),
         upload: { addEventListener: vi.fn() },
         addEventListener: vi.fn(),
         ...overrides,
@@ -534,6 +535,76 @@ describe('HttpClientFetch', () => {
         ([name]) => name === 'Authorization',
       );
       expect(authHeader?.[1]).toEqual('Bearer tok');
+    });
+    it('Should apply response interceptors to XHR upload and resolve with their response.', async () => {
+      const formData = new FormData();
+      const retriedBody = { uploaded: true };
+      const xhrMock = makeXhrMock({
+        status: 401,
+        responseText: JSON.stringify({ message: 'Unauthorized' }),
+        responseURL: `${BASE_URL}/upload`,
+      });
+      stubXhr(xhrMock);
+
+      const seen: Array<{ status: number; url: string; body: unknown }> = [];
+
+      client.addResponseInterceptor({
+        async onResponse(response: Response | Promise<Response>): Promise<Response> {
+          const resolved = await response;
+          seen.push({
+            status: resolved.status,
+            url: resolved.url,
+            body: await resolved.clone().json(),
+          });
+
+          return new Response(JSON.stringify(retriedBody), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          });
+        },
+      });
+
+      const uploadPromise = client.upload<typeof retriedBody, FormData>(
+        '/upload',
+        formData,
+        {},
+        vi.fn(),
+      );
+
+      findHandler(xhrMock.addEventListener, 'load')?.();
+
+      await expect(uploadPromise).resolves.toStrictEqual(retriedBody);
+      expect(seen).toStrictEqual([
+        { status: 401, url: `${BASE_URL}/upload`, body: { message: 'Unauthorized' } },
+      ]);
+    });
+
+    it('Should reject XHR upload with error response returned by interceptor.', async () => {
+      const formData = new FormData();
+      const errorBody = { message: 'Unauthorized' };
+      const xhrMock = makeXhrMock({
+        status: 401,
+        responseText: JSON.stringify(errorBody),
+        responseURL: `${BASE_URL}/upload`,
+      });
+      stubXhr(xhrMock);
+
+      client.addResponseInterceptor({
+        async onResponse(response: Response | Promise<Response>): Promise<Response> {
+          return response;
+        },
+      });
+
+      const uploadPromise = client.upload<typeof errorBody, FormData>(
+        '/upload',
+        formData,
+        {},
+        vi.fn(),
+      );
+
+      findHandler(xhrMock.addEventListener, 'load')?.();
+
+      await expect(uploadPromise).rejects.toMatchObject({ status: 401, data: errorBody });
     });
   });
 

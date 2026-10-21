@@ -336,4 +336,56 @@ export declare class HttpClientFetch implements IHttpClient {
    * const data = await this.fetchIt<{ id: number }>(url, config);
    */
   private fetchIt<TResponse>(url: string, config: TRequestConfig): Promise<TResponse>;
+
+  /**
+   * Применяет интерсепторы ответа и превращает итоговый ответ в результат запроса.
+   *
+   * @param {Response} response
+   * Ответ сервера, полученный через Fetch API или собранный из XHR.
+   *
+   * @param {TRequestConfig} config
+   * Конфигурация запроса, связанная с данным ответом.
+   *
+   * @returns {Promise<TResponse>}
+   * Промис, который разрешается с телом ответа, который вернул последний интерсептор.
+   *
+   * @throws
+   * Нормализованная ошибка `TResponseError`, если итоговый ответ неуспешный, или ошибка интерсептора.
+   *
+   * @example
+   * const data = await this.handleResponse<{ id: number }>(response, config);
+   */
+  private handleResponse<TResponse>(response: Response, config: TRequestConfig): Promise<TResponse>;
+
+  /**
+   * Собирает `Response` из завершённого XHR-запроса, чтобы загрузка с прогрессом проходила
+   * через интерсепторы ответа так же, как запросы через Fetch API.
+   *
+   * @param {XMLHttpRequest} xhr
+   * Завершённый XHR-запрос.
+   *
+   * @param {string} url
+   * Полный адрес запроса — используется, если `xhr.responseURL` пуст.
+   *
+   * @returns {Response}
+   * Ответ со статусом, телом, `content-type` и `url` XHR-запроса.
+   *
+   * @example
+   * const response = this.toResponse(xhr, fullUrl);
+   */
+  private toResponse(xhr: XMLHttpRequest, url: string): Response;
+
+  /**
+   * Проверяет, является ли текст корректным JSON.
+   *
+   * @param {string} text
+   * Тело ответа.
+   *
+   * @returns {boolean}
+   * `true`, если текст разбирается как JSON.
+   *
+   * @example
+   * this.isJson('{"ok":true}'); // true
+   */
+  private isJson(text: string): boolean;
 }

@@ -136,6 +136,8 @@ const createdWithHeaders = await httpClient.post<TCreateItemResponse, TCreateIte
 Не устанавливает Content-Type принудительно — это позволяет корректно работать с FormData и др.
 
 При передаче `onProgress` использует `XMLHttpRequest` (XHR) для отслеживания прогресса.
+Ответ XHR проходит через перехватчики ответов так же, как ответ `fetch`: обработка `401` с обновлением
+токена работает и для загрузки с прогрессом.
 
 **Обычная загрузка файла:**
 ```typescript

@@ -81,7 +81,7 @@ export default class HttpClientFetch implements IHttpClient {
     const interceptedConfig = this.applyRequestInterceptors(config);
     const fullUrl = `${this.baseUrl}${url}`;
 
-    return new Promise<TResponse>((resolve, reject) => {
+    const xhrResponse = await new Promise<Response>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
 
       xhr.upload.addEventListener('progress', (event: ProgressEvent) => {
@@ -90,22 +90,7 @@ export default class HttpClientFetch implements IHttpClient {
         }
       });
 
-      xhr.addEventListener('load', () => {
-        const data = this.parseXhrResponse<TResponse>(xhr.responseText);
-
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(data);
-        } else {
-          const error: TResponseError<TResponse> = {
-            status: xhr.status,
-            url: xhr.responseURL,
-            raw: new Response(xhr.responseText, { status: xhr.status }),
-            data,
-          };
-          reject(error);
-        }
-      });
-
+      xhr.addEventListener('load', () => resolve(this.toResponse(xhr, fullUrl)));
       xhr.addEventListener('error', () => reject(new Error('Network error')));
       xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
 
@@ -120,13 +105,31 @@ export default class HttpClientFetch implements IHttpClient {
 
       xhr.send(payload as XMLHttpRequestBodyInit);
     });
+
+    return this.handleResponse<TResponse>(xhrResponse, interceptedConfig);
   }
 
-  private parseXhrResponse<T>(responseText: string): T {
+  private toResponse(xhr: XMLHttpRequest, url: string): Response {
+    const hasBody = ![101, 204, 205, 304].includes(xhr.status);
+    const contentType =
+      xhr.getResponseHeader('content-type') ??
+      (this.isJson(xhr.responseText) ? 'application/json' : 'text/plain');
+    const response = new Response(hasBody ? xhr.responseText : null, {
+      status: xhr.status,
+      headers: { 'content-type': contentType },
+    });
+
+    Object.defineProperty(response, 'url', { value: xhr.responseURL || url });
+
+    return response;
+  }
+
+  private isJson(text: string): boolean {
     try {
-      return JSON.parse(responseText) as T;
+      JSON.parse(text);
+      return true;
     } catch {
-      return responseText as unknown as T;
+      return false;
     }
   }
 
@@ -239,12 +242,19 @@ export default class HttpClientFetch implements IHttpClient {
   }
 
   private async fetchIt<TResponse>(url: string, config: TRequestConfig): Promise<TResponse> {
-    const response = await this.applyResponseInterceptors(await fetch(url, config), config);
+    return this.handleResponse<TResponse>(await fetch(url, config), config);
+  }
 
-    if (!response.ok) {
-      throw await this.normalizeError(response, await this.parse(response));
+  private async handleResponse<TResponse>(
+    response: Response,
+    config: TRequestConfig,
+  ): Promise<TResponse> {
+    const intercepted = await this.applyResponseInterceptors(response, config);
+
+    if (!intercepted.ok) {
+      throw await this.normalizeError(intercepted, await this.parse(intercepted));
     }
 
-    return this.parse(response);
+    return this.parse(intercepted);
   }
 }
