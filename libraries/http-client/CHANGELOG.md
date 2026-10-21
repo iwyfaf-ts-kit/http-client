@@ -1,6 +1,19 @@
 # Changelog
 
 
+## v1.3.2
+
+[compare changes](https://github.com/iwyfaf-ts-kit/http-client/compare/v1.3.1...v1.3.2)
+
+### 🩹 Fixes
+
+- Await response interceptors and use their response for result ([e54bffc](https://github.com/iwyfaf-ts-kit/http-client/commit/e54bffc))
+- Run response interceptors for XHR upload with progress ([882ae92](https://github.com/iwyfaf-ts-kit/http-client/commit/882ae92))
+
+### ❤️ Contributors
+
+- Iwatchyoufromafar <skip1209@yahoo.com>
+
 ## v1.3.1
 
 [compare changes](https://github.com/iwyfaf-ts-kit/http-client/compare/v1.3.0...v1.3.1)
