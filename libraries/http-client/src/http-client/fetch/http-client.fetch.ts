@@ -199,14 +199,17 @@ export default class HttpClientFetch implements IHttpClient {
     );
   }
 
-  private applyResponseInterceptors(
-    response: Response | Promise<Response>,
+  private async applyResponseInterceptors(
+    response: Response,
     config: TRequestConfig,
-  ): Response | Promise<Response> {
-    return this.responseInterceptors.reduce(
-      (accResponse, interceptor) => interceptor.onResponse(accResponse, config),
-      response,
-    );
+  ): Promise<Response> {
+    let current = response;
+
+    for (const interceptor of this.responseInterceptors) {
+      current = await interceptor.onResponse(current, config);
+    }
+
+    return current;
   }
 
   private parse(data: Response): Promise<any> {
@@ -236,19 +239,12 @@ export default class HttpClientFetch implements IHttpClient {
   }
 
   private async fetchIt<TResponse>(url: string, config: TRequestConfig): Promise<TResponse> {
-    return new Promise((resolve, reject) => {
-      fetch(url, config)
-        .then(async (response: Response) => {
-          const interceptedResponse = this.applyResponseInterceptors(response, config);
+    const response = await this.applyResponseInterceptors(await fetch(url, config), config);
 
-          if (!response.ok) {
-            reject(await this.normalizeError(response, await this.parse(response)));
-            return;
-          }
+    if (!response.ok) {
+      throw await this.normalizeError(response, await this.parse(response));
+    }
 
-          resolve(this.parse(await interceptedResponse));
-        })
-        .catch(reject);
-    });
+    return this.parse(response);
   }
 }

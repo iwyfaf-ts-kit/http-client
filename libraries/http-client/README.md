@@ -231,11 +231,15 @@ const responseInterceptor: TResponseInterceptor = {
   async onResponse(response, config: TRequestConfig): Promise<Response> {
     const res = await response;
 
-    if (res.status === 401) {
-      // например, выполнить логаут или обновление токена
-      
-      // Или выполнить повторно запрос
-      await httpClient.request(config);
+    if (res.status === 401 && !config.requestRetry) {
+      await refreshToken();
+
+      // Повтор запроса: возвращённый Response заменяет исходный
+      return fetch(res.url, {
+        ...config,
+        requestRetry: true,
+        headers: { ...config.headers, Authorization: `Bearer ${getAccessToken()}` },
+      } as RequestInit);
     }
 
     return res;
@@ -245,8 +249,10 @@ const responseInterceptor: TResponseInterceptor = {
 httpClient.addResponseInterceptor(responseInterceptor);
 ```
 
-Перехватчики ответов также применяются последовательно, в порядке добавления. Каждый перехватчик может вернуть 
-новый/модифицированный `Response`.
+Перехватчики ответов применяются последовательно, в порядке добавления; клиент дожидается каждого. Каждый
+перехватчик может вернуть новый/модифицированный `Response` — успех или ошибку запроса клиент определяет по ответу,
+который вернул последний перехватчик. Так, повтор после обновления токена отдаёт вызывающему коду результат повтора,
+а не исходный `401`. Ошибка, выброшенная перехватчиком, отклоняет запрос.
 
 ### Обработка ошибок
 

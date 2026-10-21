@@ -270,24 +270,21 @@ export declare class HttpClientFetch implements IHttpClient {
   private applyRequestInterceptors(config: TRequestConfig): TRequestConfig;
 
   /**
-   * Последовательно применяет все интерсепторы ответа к полученному ответу или промису ответа.
+   * Последовательно применяет все интерсепторы ответа, дожидаясь каждого.
    *
-   * @param {Response | Promise<Response>} response
-   * Исходный ответ сервера или промис ответа, который будет обработан интерсепторами.
+   * @param {Response} response
+   * Ответ сервера, который будет обработан интерсепторами.
    *
    * @param {TRequestConfig} config
    * Конфигурация запроса, связанная с данным ответом.
    *
-   * @returns {Response | Promise<Response>}
-   * Ответ или промис ответа после применения всех интерсепторов.
+   * @returns {Promise<Response>}
+   * Ответ, который вернул последний интерсептор; по нему решается успех или ошибка запроса.
    *
    * @example
-   * const handledResponse = this.applyResponseInterceptors(fetchResponse, requestConfig);
+   * const handledResponse = await this.applyResponseInterceptors(fetchResponse, requestConfig);
    */
-  private applyResponseInterceptors(
-    response: Response | Promise<Response>,
-    config: TRequestConfig,
-  ): Response | Promise<Response>;
+  private applyResponseInterceptors(response: Response, config: TRequestConfig): Promise<Response>;
 
   /**
    * Парсит ответ сервера в удобный для использования формат (например, JSON).

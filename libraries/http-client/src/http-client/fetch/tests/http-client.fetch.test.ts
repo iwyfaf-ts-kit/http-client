@@ -775,5 +775,160 @@ describe('HttpClientFetch', () => {
 
       expect(result).toStrictEqual(bodyAfterSecond);
     });
+
+    it('Should resolve with response returned by interceptor instead of original error response.', async () => {
+      const retriedBody = { id: 1, retried: true };
+
+      const unauthorizedResponse = {
+        ok: false,
+        status: 401,
+        url: `${BASE_URL}/items/1`,
+        json: vi.fn().mockResolvedValue({ message: 'Unauthorized' }),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
+        text: vi.fn(),
+      } as unknown as Response;
+
+      const retriedResponse = {
+        ok: true,
+        status: 200,
+        url: `${BASE_URL}/items/1`,
+        json: vi.fn().mockResolvedValue(retriedBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
+        text: vi.fn(),
+      } as unknown as Response;
+
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(unauthorizedResponse);
+
+      client.addResponseInterceptor({
+        async onResponse(response: Response | Promise<Response>): Promise<Response> {
+          const resolved = await response;
+          await new Promise((resolve) => setTimeout(resolve, 10));
+
+          return resolved.status === 401 ? retriedResponse : resolved;
+        },
+      });
+
+      const config: TRequestConfig = {
+        method: 'POST',
+        url: '/items/1',
+        requestRetry: false,
+        retryCount: 0,
+      };
+
+      const result = await client.request<typeof retriedBody>(config);
+
+      expect(result).toStrictEqual(retriedBody);
+      expect(unauthorizedResponse.json).not.toHaveBeenCalled();
+    });
+
+    it('Should reject with error response returned by interceptor after it finishes.', async () => {
+      const errorBody = { message: 'Unauthorized' };
+      const calls: string[] = [];
+
+      const unauthorizedResponse = {
+        ok: false,
+        status: 401,
+        url: `${BASE_URL}/items/1`,
+        json: vi.fn().mockResolvedValue(errorBody),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
+        text: vi.fn(),
+      } as unknown as Response;
+
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(unauthorizedResponse);
+
+      client.addResponseInterceptor({
+        async onResponse(response: Response | Promise<Response>): Promise<Response> {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+          calls.push('interceptor');
+
+          return response;
+        },
+      });
+
+      const config: TRequestConfig = {
+        method: 'GET',
+        url: '/items/1',
+        requestRetry: false,
+        retryCount: 0,
+      };
+
+      await expect(
+        client.request(config).catch((error: TResponseError<typeof errorBody>) => {
+          calls.push('reject');
+          throw error;
+        }),
+      ).rejects.toMatchObject({ status: 401, data: errorBody });
+      expect(calls).toStrictEqual(['interceptor', 'reject']);
+    });
+
+    it('Should reject when interceptor turns successful response into error response.', async () => {
+      const okResponse = {
+        ok: true,
+        status: 200,
+        url: `${BASE_URL}/items/1`,
+        json: vi.fn().mockResolvedValue({ id: 1 }),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
+        text: vi.fn(),
+      } as unknown as Response;
+
+      const forbiddenResponse = {
+        ok: false,
+        status: 403,
+        url: `${BASE_URL}/items/1`,
+        json: vi.fn().mockResolvedValue({ message: 'Forbidden' }),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
+        text: vi.fn(),
+      } as unknown as Response;
+
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(okResponse);
+
+      client.addResponseInterceptor({
+        async onResponse(): Promise<Response> {
+          return forbiddenResponse;
+        },
+      });
+
+      const config: TRequestConfig = {
+        method: 'GET',
+        url: '/items/1',
+        requestRetry: false,
+        retryCount: 0,
+      };
+
+      await expect(client.request(config)).rejects.toMatchObject({
+        status: 403,
+        data: { message: 'Forbidden' },
+      });
+    });
+
+    it('Should reject when interceptor throws.', async () => {
+      const failure = new Error('Refresh failed');
+
+      const mockResponse = {
+        ok: false,
+        status: 401,
+        url: `${BASE_URL}/items/1`,
+        json: vi.fn(),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
+        text: vi.fn(),
+      } as unknown as Response;
+
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      client.addResponseInterceptor({
+        async onResponse(): Promise<Response> {
+          throw failure;
+        },
+      });
+
+      const config: TRequestConfig = {
+        method: 'GET',
+        url: '/items/1',
+        requestRetry: false,
+        retryCount: 0,
+      };
+
+      await expect(client.request(config)).rejects.toBe(failure);
+    });
   });
 });
