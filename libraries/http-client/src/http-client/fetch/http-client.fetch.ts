@@ -5,6 +5,7 @@ import type {
   TRequestInterceptor,
   TResponseInterceptor,
   TUploadProgressCallback,
+  TUploadMethod,
 } from '../../types';
 
 export default class HttpClientFetch implements IHttpClient {
@@ -61,9 +62,10 @@ export default class HttpClientFetch implements IHttpClient {
     payload: TPayload,
     headers?: HeadersInit,
     onProgress?: TUploadProgressCallback,
+    method: TUploadMethod = 'POST',
   ): Promise<TResponse> {
     const config: TRequestConfig = {
-      method: 'POST',
+      method,
       headers: {
         Accept: 'application/json, text/plain, */*',
         ...headers,
@@ -94,7 +96,7 @@ export default class HttpClientFetch implements IHttpClient {
       xhr.addEventListener('error', () => reject(new Error('Network error')));
       xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
 
-      xhr.open('POST', fullUrl);
+      xhr.open(method, fullUrl);
 
       const resolvedHeaders = interceptedConfig.headers as Record<string, string> | undefined;
       if (resolvedHeaders) {

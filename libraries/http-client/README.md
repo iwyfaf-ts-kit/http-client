@@ -131,7 +131,7 @@ const createdWithHeaders = await httpClient.post<TCreateItemResponse, TCreateIte
 
 ### `upload`
 
-Выполняет `POST`‑запрос для загрузки файлов/сырых данных. 
+Выполняет запрос для загрузки файлов/сырых данных: по умолчанию `POST`, пятым аргументом — `PUT` или `PATCH`.
 
 Не устанавливает Content-Type принудительно — это позволяет корректно работать с FormData и др.
 
@@ -157,6 +157,11 @@ const onProgress: TUploadProgressCallback = (percent) => {
 };
 
 await httpClient.upload<string>('upload', formData, {}, onProgress);
+```
+
+**Загрузка файла методом `PATCH`:**
+```typescript
+await httpClient.upload<TItem>('/items/1', formData, {}, undefined, 'PATCH');
 ```
 
 ### `put`

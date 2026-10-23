@@ -409,6 +409,28 @@ describe('HttpClientFetch', () => {
       expect(headers['Content-Type']).toBeUndefined();
     });
 
+    it('Should send upload with the given method.', async () => {
+      const formData = new FormData();
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        url: `${BASE_URL}/upload/1`,
+        json: vi.fn().mockResolvedValue({ success: true }),
+        headers: { get: vi.fn().mockReturnValue('application/json') },
+        text: vi.fn(),
+      } as unknown as Response;
+
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      await client.upload('/upload/1', formData, {}, undefined, 'PATCH');
+
+      const calledConfig = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock
+        .calls[0][1] as TRequestConfig;
+
+      expect(calledConfig.method).toEqual('PATCH');
+      expect(calledConfig.body).toBe(formData);
+    });
+
     afterEach(() => {
       vi.unstubAllGlobals();
     });
@@ -460,6 +482,18 @@ describe('HttpClientFetch', () => {
       expect(result).toStrictEqual(responseBody);
       expect(progressValues).toEqual([50, 100]);
       expect(global.fetch).not.toHaveBeenCalled();
+      expect(xhrMock.open).toHaveBeenCalledWith('POST', `${BASE_URL}/upload`);
+    });
+
+    it('Should open XHR with the given method when onProgress is provided.', async () => {
+      const xhrMock = makeXhrMock({ status: 200, responseText: '{}' });
+      stubXhr(xhrMock);
+
+      const uploadPromise = client.upload('/upload/1', new FormData(), {}, vi.fn(), 'PUT');
+      findHandler(xhrMock.addEventListener, 'load')?.();
+      await uploadPromise;
+
+      expect(xhrMock.open).toHaveBeenCalledWith('PUT', `${BASE_URL}/upload/1`);
     });
 
     it('Should reject with normalized error when XHR upload fails with non-2xx status.', async () => {

@@ -92,6 +92,11 @@ export type TResponseError<Error> = {
 export type TUploadProgressCallback = (percent: number) => void;
 
 /**
+ * HTTP-метод загрузки файла.
+ */
+export type TUploadMethod = 'POST' | 'PUT' | 'PATCH';
+
+/**
  * Интерцептор запроса, позволяющий модифицировать конфигурацию перед отправкой.
  *
  * @example

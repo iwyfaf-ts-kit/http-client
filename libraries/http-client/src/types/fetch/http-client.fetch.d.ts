@@ -5,6 +5,7 @@ import type {
   TResponseError,
   TResponseInterceptor,
   TUploadProgressCallback,
+  TUploadMethod,
 } from '../http-client.types';
 
 /**
@@ -116,7 +117,7 @@ export declare class HttpClientFetch implements IHttpClient {
   ): Promise<TResponse>;
 
   /**
-   * Выполняет загрузку файла на сервер методом POST.
+   * Выполняет загрузку файла на сервер (по умолчанию методом POST).
    * При передаче `onProgress` использует XMLHttpRequest (XHR) для отслеживания прогресса.
    *
    * @param {string} url
@@ -131,11 +132,15 @@ export declare class HttpClientFetch implements IHttpClient {
    * @param {TUploadProgressCallback} [onProgress]
    * Колбэк с процентом загрузки (0–100).
    *
+   * @param {TUploadMethod} [method]
+   * HTTP-метод загрузки: `POST` (по умолчанию), `PUT` или `PATCH`.
+   *
    * @example
    * ```ts
    * const formData = new FormData();
    * formData.append('file', file);
    * await httpClient.upload('/files', formData, {}, (percent) => console.log(percent));
+   * await httpClient.upload('/files/1', formData, {}, undefined, 'PATCH');
    * ```
    */
   upload<TResponse, TPayload = object>(
@@ -143,6 +148,7 @@ export declare class HttpClientFetch implements IHttpClient {
     payload: TPayload,
     headers?: HeadersInit,
     onProgress?: TUploadProgressCallback,
+    method?: TUploadMethod,
   ): Promise<TResponse>;
 
   /**
