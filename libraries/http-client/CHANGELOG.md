@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.4.0
+
+[compare changes](https://github.com/iwyfaf-ts-kit/http-client/compare/v1.3.2...v1.4.0)
+
+### 🚀 Enhancements
+
+- Choose the HTTP method for upload ([a3542f4](https://github.com/iwyfaf-ts-kit/http-client/commit/a3542f4))
+
+### ❤️ Contributors
+
+- Iwatchyoufromafar <skip1209@yahoo.com>
+
 ## v1.3.2
 
 [compare changes](https://github.com/iwyfaf-ts-kit/http-client/compare/v1.3.1...v1.3.2)
