@@ -15,6 +15,12 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.es.js"
+    }
+  },
   "module": "dist/index.es.js",
   "types": "dist/types/index.d.ts",
   "files": [
