@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.4.1
+
+[compare changes](https://github.com/iwyfaf-ts-kit/http-client/compare/v1.4.0...v1.4.1)
+
+### 🩹 Fixes
+
+- Declare package exports ([e4ba5cd](https://github.com/iwyfaf-ts-kit/http-client/commit/e4ba5cd))
+
+### ❤️ Contributors
+
+- Iwatchyoufromafar <skip1209@yahoo.com>
+
 ## v1.4.0
 
 [compare changes](https://github.com/iwyfaf-ts-kit/http-client/compare/v1.3.2...v1.4.0)
